@@ -1,0 +1,10 @@
+version: "01"
+entry:
+  setup: "one_candle_breakout"
+  market_time: "09:30"          # ET
+  timeframe_setup: "5m"          # mark high/low of first 5m candle
+  timeframe_entry: "1m"          # wait for 1m breakout
+  fair_value_gap: true           # 3-candle pattern outside range
+exit:
+  risk_reward_ratio: 2.0         # fixed 2R target
+  stop_loss_type: "fvg_bottom"   # stop at bottom of FVG candle + wicks
