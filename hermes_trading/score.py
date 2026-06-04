@@ -3,7 +3,6 @@ Scoring function: evaluates trade outcomes against goal.yaml
 Returns composite score in [-1, +1]
 """
 import yaml
-from typing import list, dict
 import numpy as np
 
 

@@ -4,7 +4,7 @@ Falls back to free public data (CoinGecko for crypto, but we're using stock data
 """
 import httpx
 import asyncio
-from typing import dict, list
+import os
 
 
 async def fetch_mnq_ohlcv(timeframe: str = "1m") -> dict:

@@ -12,7 +12,6 @@ from pathlib import Path
 from datetime import datetime
 from score import load_goal, score
 
-
 def load_trades(trades_path: str = "state/trades.jsonl") -> list:
     """Load all trades from jsonl"""
     trades = []
