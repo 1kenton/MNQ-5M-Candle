@@ -114,7 +114,7 @@ if __name__ == "__main__":
     Path("state").mkdir(exist_ok=True)
     
     # Boot message
-    print("Booting hermes-trading worker")
+    print("Booting hermes-trading worker v2")
     print(f"  Mode: {os.getenv('HERMES_TRADING_MODE', 'paper')}")
     print(f"  Asset: MNQ")
     print(f"  Strategy: one-candle-breakout")
