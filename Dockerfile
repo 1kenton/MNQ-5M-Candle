@@ -8,4 +8,6 @@ COPY hermes_trading ./hermes_trading
 COPY state ./state
 RUN /root/.local/bin/uv sync
 ENV HERMES_TRADING_MODE=paper
+# Force rebuild timestamp
+RUN echo "Built at $(date)" > /app/.build-info
 CMD ["/root/.local/bin/uv", "run", "python", "-m", "hermes_trading.run"]
