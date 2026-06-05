@@ -12,18 +12,27 @@ from hermes_trading.adapters.price import fetch as fetch_price
 
 
 def load_strategy(strategy_path: str = "state/strategy.yaml") -> dict:
+    # Support both relative and container paths
+    if not Path(strategy_path).exists():
+        strategy_path = f"/app/{strategy_path}"
     with open(strategy_path) as f:
         return yaml.safe_load(f)
 
 
 def log_trade(trade: dict, trades_path: str = "state/trades.jsonl"):
     """Append trade to jsonl"""
+    if not Path(trades_path).exists():
+        trades_path = f"/app/{trades_path}"
+    Path(trades_path).parent.mkdir(parents=True, exist_ok=True)
     with open(trades_path, "a") as f:
         f.write(json.dumps(trade) + "\n")
 
 
 def log_heartbeat(heartbeat: dict, heartbeat_path: str = "state/heartbeat.json"):
     """Write heartbeat"""
+    if not Path(heartbeat_path).exists():
+        heartbeat_path = f"/app/{heartbeat_path}"
+    Path(heartbeat_path).parent.mkdir(parents=True, exist_ok=True)
     with open(heartbeat_path, "w") as f:
         json.dump(heartbeat, f)
 
