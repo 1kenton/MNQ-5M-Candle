@@ -1,76 +1,74 @@
 """
-Price data adapter. Pulls 1-minute and 5-minute OHLCV candles for MNQ.
-Falls back to free public data (CoinGecko for crypto, but we're using stock data here).
+Price data adapter — Yahoo Finance chart API for NQ=F (E-mini Nasdaq futures).
 """
-import httpx
 import asyncio
-import os
+import logging
+from datetime import datetime, timezone
+
+import httpx
+
+logger = logging.getLogger(__name__)
+
+_YF_CHART = "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (compatible; paper-trader/1.0)",
+    "Accept": "application/json",
+}
 
 
-async def fetch_mnq_ohlcv(timeframe: str = "1m") -> dict:
+async def fetch_ohlcv(symbol: str = "NQ=F", interval: str = "1m", period: str = "1d") -> list:
     """
-    Fetch MNQ (Micro E-mini Nasdaq-100 futures) OHLCV data.
-    
-    For stock index futures, we use:
-    - IEX Cloud (free tier available)
-    - Polygon.io (free tier available)
-    - Alpha Vantage (free tier, limited)
-    
-    Falls back to a mock response if no API key is available.
+    Fetch OHLCV candles from Yahoo Finance chart API.
+    Returns list of dicts sorted oldest-first.
+    Each dict: {timestamp, open, high, low, close, volume}
     """
-    try:
-        # Try IEX Cloud first (free tier: 100 req/day)
-        iex_token = os.getenv("IEX_API_KEY", "")
-        if iex_token:
-            async with httpx.AsyncClient(timeout=10) as client:
-                # IEX doesn't have futures; we'd need to pull QQQ as proxy
-                resp = await client.get(
-                    f"https://cloud.iexapis.com/stable/stock/QQQ/intraday?token={iex_token}"
-                )
-                if resp.status_code == 200:
-                    data = resp.json()
-                    return {
-                        "source": "iex",
-                        "symbol": "MNQ",
-                        "timeframe": timeframe,
-                        "candles": data,
-                        "schema_version": "1.0"
-                    }
-    except Exception as e:
-        print(f"[price.fetch_mnq_ohlcv] IEX fetch failed: {e}")
-    
-    # Fallback: mock data (for development/testing)
-    return {
-        "source": "mock",
-        "symbol": "MNQ",
-        "timeframe": timeframe,
-        "candles": [
-            {
-                "timestamp": 1700000000,
-                "open": 17500.0,
-                "high": 17520.0,
-                "low": 17490.0,
-                "close": 17510.0,
-                "volume": 1000
-            }
-        ],
-        "schema_version": "1.0"
-    }
+    url = _YF_CHART.format(symbol=symbol)
+    params = {"interval": interval, "range": period}
 
+    for attempt in range(3):
+        try:
+            async with httpx.AsyncClient(timeout=20, headers=_HEADERS) as client:
+                resp = await client.get(url, params=params)
+                resp.raise_for_status()
+                data = resp.json()
 
-async def fetch():
-    """Main entrypoint. Returns dict with schema_version."""
-    candles_1m = await fetch_mnq_ohlcv("1m")
-    candles_5m = await fetch_mnq_ohlcv("5m")
-    
-    return {
-        "1m": candles_1m,
-        "5m": candles_5m,
-        "schema_version": "1.0"
-    }
+            result = data["chart"]["result"]
+            if not result:
+                return []
 
+            r = result[0]
+            timestamps = r.get("timestamp", [])
+            quote = r["indicators"]["quote"][0]
+            opens  = quote.get("open", [])
+            highs  = quote.get("high", [])
+            lows   = quote.get("low", [])
+            closes = quote.get("close", [])
+            vols   = quote.get("volume", [])
 
-if __name__ == "__main__":
-    import os
-    result = asyncio.run(fetch())
-    print(result)
+            candles = []
+            for i, ts in enumerate(timestamps):
+                o = opens[i] if i < len(opens) else None
+                h = highs[i] if i < len(highs) else None
+                l = lows[i] if i < len(lows) else None
+                c = closes[i] if i < len(closes) else None
+                v = vols[i] if i < len(vols) else 0
+                if None in (o, h, l, c):
+                    continue
+                candles.append({
+                    "timestamp": ts,
+                    "open": float(o),
+                    "high": float(h),
+                    "low": float(l),
+                    "close": float(c),
+                    "volume": float(v) if v else 0.0,
+                })
+            candles.sort(key=lambda c: c["timestamp"])
+            return candles
+
+        except Exception as e:
+            if attempt == 2:
+                logger.error(f"fetch_ohlcv({symbol},{interval}) failed after 3 tries: {e}")
+                return []
+            await asyncio.sleep(2 ** attempt)
+
+    return []

@@ -5,13 +5,9 @@ description = "Self-improving paper trading agent with Hermes reflection"
 requires-python = ">=3.10"
 
 dependencies = [
-    "ccxt>=4.0",
     "pyyaml>=6.0",
     "httpx>=0.27",
-    "aiofiles>=23.2",
-    "numpy>=1.24",
-    "pandas>=2.0",
-    "rich>=13.0",
+    "anthropic>=0.25.0",
 ]
 
 [tool.uv]

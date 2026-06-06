@@ -1,10 +1,9 @@
 version: "01"
+strategy_name: "One Candle Setup — NQ/MNQ Opening Range + FVG Breakout"
+
+# Tunable parameters (Hermes changes ONE per reflection cycle)
 entry:
-  setup: "one_candle_breakout"
-  market_time: "09:30"
-  timeframe_setup: "5m"
-  timeframe_entry: "1m"
-  fair_value_gap: true
-exit:
-  risk_reward_ratio: 2.0
-  stop_loss_type: "fvg_bottom"
+  rr_ratio: 2.0            # risk-to-reward ratio for target
+  sl_buffer_pct: 0.001     # fraction buffer added to SL beyond the FVG boundary
+  fvg_min_gap_pct: 0.0     # minimum FVG size as fraction of price (0 = any gap)
+  trade_window_end: 1100   # stop entering new trades after this time (HHMM ET)
