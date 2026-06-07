@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:${PATH}"
 # Cache bust
-RUN echo "Bust: $(date +%s%N)" > /tmp/bust
+RUN echo "Bust: 1780803142" > /tmp/bust
 COPY pyproject.toml ./
 COPY hermes_trading ./hermes_trading
 COPY state ./state
