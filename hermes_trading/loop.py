@@ -203,7 +203,7 @@ async def loop_once(state: dict) -> dict:
         if closed:
             closed["close_ts"] = int(now_utc.timestamp())
             _sd = abs(trade["entry_price"] - trade["stop_loss"]) / trade["entry_price"]
-            _pos = (state.get("balance", 5000.0) * 0.01 / _sd) if _sd > 0 else 0.0
+            _pos = (state.get("balance", 5000.0) * 0.02 / _sd) if _sd > 0 else 0.0
             pnl_usd = round(closed["pnl_pct"] * _pos, 4)
             state["balance"] = round(state.get("balance", 5000.0) + pnl_usd, 4)
             closed["pnl_usd"] = pnl_usd
